@@ -1,0 +1,689 @@
+<style>
+body { font-family: arial; font-size:12pt }
+[class^="code"]{
+    padding: 5px 5px 5px 10px;
+}
+.code-bad { background: #DCEFBD }
+.code-good { background: #E4B3B3 }
+.code { background: #E6F4FB }
+
+pre { font-size: 10pt; }
+</style>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script>
+    $(function(){
+
+        [1,2,3,4].forEach(function(num){
+          var nodeType = 'h' + num;
+          $(nodeType).each(function(){
+              var $ul = $('<ul>').insertAfter($(this));
+              $ul.nextUntil(nodeType).wrapAll('<li>').parent().appendTo($ul);
+          });
+
+        });
+
+        $('em').each(function(){
+            var text = this.textContent.trim();
+            if($(this).siblings().get() == 0)
+                $(this).insertAfter($(this).parent()).before('<br>')
+                        .prev().remove();
+
+            if(text == 'bad')
+                $(this).next('pre').addClass('code-bad');
+            else if(text == 'good')
+                $(this).next('pre').addClass('code-good');
+
+        });
+
+
+        $('pre').each(function(){
+            $(this).html($(this).children('code').html());
+        }).filter(':not([class^="code"])').addClass('code');
+
+    });
+</script>
+
+<h1>Javascript Styleguide</h1>
+
+<p>A lot of the items in the styleguide were copied from google's styleguides (https://github.com/julian-boolean/styleguide - forked from google).</p>
+
+<h2>Language Features</h2>
+
+<h3>var</h3>
+
+<p>Always declare variables with the <code>var</code> keyword</p>
+
+<pre><code>var foo = 'bar';
+</code></pre>
+
+<h3>Constants</h3>
+
+<p>name constant variables with all caps and underscores between words
+use <code>@const</code> jsdoc tag<br>
+dont use the <code>const</code> keyword. it is not supported by all browse</p>
+
+<pre><code>var NAME_LIKE_THIS = "10";
+</code></pre>
+
+<h3>Semicolons</h3>
+
+<p>Use semicolons after every statement except when it's the only statement in a single line function.
+Relying on implicit insertion can cause subtle, hard to debug problems. Don't do it. You're better than that.</p>
+
+<p><em>bad</em></p>
+
+<pre><code>var someFunction = function(){
+    return 10;
+} // missing semicolon.
+
+(function(){
+    /*...*/
+})();
+</code></pre>
+
+<p>The first function is called with the second function as a parameter (this returns the number 10),
+then the final parentheses tells the interpreter to call the number 10 as a function resulting in an error.</p>
+
+<h3>Wrapper objects for primitive types</h3>
+
+<p>There's no reason to use wrapper objects for primitive types, plus they're dangerous:</p>
+
+<p><em>bad</em></p>
+
+<pre><code>var x = new Boolean(false);
+if (x) {
+    alert('hi');  // Shows 'hi'.
+}
+</code></pre>
+
+<p>Don't do it!</p>
+
+<p>However type casting is fine.</p>
+
+<p><em>good</em></p>
+
+<pre><code>var x = Boolean(0);
+if (x) {
+    alert('hi');  // This will never be alerted.
+}
+typeof Boolean(0) == 'boolean';
+typeof new Boolean(0) == 'object';
+</code></pre>
+
+<p>This is very useful for casting things to number, string and boolean.</p>
+
+<h3>Method and property definitions</h3>
+
+<p>While there are several ways to attach methods and properties to an object created via "new", the preferred style for methods is:</p>
+
+<pre><code>Foo.prototype.bar = function() {
+    /* ... */
+};
+</code></pre>
+
+<p>The preferred style for other properties is to initialize the field in the constructor:</p>
+
+<pre><code>/** @constructor */
+function Foo() {
+    this.bar = value;
+}
+</code></pre>
+
+<p><em>Why?</em>
+Current JavaScript engines optimize based on the "shape" of an object, adding a property to an object (including overriding a value set on the prototype) changes the shape and can degrade performance.</p>
+
+<h3>delete</h3>
+
+<p>use sparingly.
+Prefer <code>this.foo = null</code> or <code>this.foo = undefined</code>.</p>
+
+<p><em>bad</em></p>
+
+<pre><code>Foo.prototype.dispose = function() {
+    delete this.property_;
+};
+</code></pre>
+
+<p><em>good</em>   </p>
+
+<pre><code>Foo.prototype.dispose = function() {
+    this.property_ = null;
+};
+</code></pre>
+
+<p>In modern JavaScript engines, changing the number of properties on an object is much slower than reassigning the values.
+The <code>delete</code> keyword should be avoided except when it is necessary to remove a property from an object's iterated list of 
+keys, or to change the result of <code>if (key in obj)</code>.</p>
+
+<h3>eval</h3>
+
+<p>NO! there is no reason to use eval in our code.</p>
+
+<h3>with</h3>
+
+<p>NO! There is no reason to use with in any code</p>
+
+<h3>this</h3>
+
+<p>Only use in object constructors and methods.</p>
+
+<h3>for loops</h3>
+
+<p>The first portion of a for loop should assign an index and the end index.
+The second portion should compare the index to the end index. It should not do anything to compute the end index unless absolutely necessary.
+The third portion should increment or decrement the index.</p>
+
+<pre><code>var divs = $('div');
+</code></pre>
+
+<p><em>bad</em></p>
+
+<pre><code>for(var i = 0; i &lt; divs.size(); i++){
+    /*...*/
+}
+</code></pre>
+
+<p>Calls the .size method on each iteration. </p>
+
+<p><em>good</em></p>
+
+<pre><code>for(var i = 0, len = divs.size(); i &lt; len; i++){
+    /*...*/
+}
+</code></pre>
+
+<p>Calls the .size method once before the loop begins.</p>
+
+<p><em>ok</em></p>
+
+<pre><code>var values = [1,2,3,4,5/*,...*/];
+for(var i = 0, val; val = values[i]; i++){
+    /*...*/
+}
+</code></pre>
+
+<h3>for-in-loop</h3>
+
+<p>Avoid. Some interpreters will loop through all keys in an object and it's prototype chain. It is much safer to use
+object.keys.  For-in-loops should never be used on arrays. For arrays, use Array.prorotype.forEach.</p>
+
+<p><em>bad</em></p>
+
+<pre><code>for(var key in obj){
+    /*...*/
+}
+
+var array = [1,2,3,4,5,6,7];
+for(var x in array){
+    /*...*/
+}
+</code></pre>
+
+<p><em>good</em>    </p>
+
+<pre><code>Object.keys(obj).forEach(function(key){
+    /*...*/
+});
+// or
+for(var key in obj){
+    if(obj.hasOwnProperty(key)){
+        /*...*/
+    }
+}
+
+var array = [1,2,3,4,5,6,7];
+array.forEach(function(val){ 
+    /*...*/
+});
+// or 
+for(var i =0, len=array.length; o &lt; len; i++){
+    /*...*/
+}
+</code></pre>
+
+<h3>Standards features</h3>
+
+<p>Always preferred over non-standards features<br>
+For maximum portability and compatibility, always prefer standards features over non-standards features (e.g., string.charAt(3) over string[3] and element access with DOM functions instead of using an application-specific shorthand).</p>
+
+<h3>Modifying prototypes of builtin objects</h3>
+
+<p>No!<br>
+Modifying builtins like Object.prototype and Array.prototype are strictly forbidden. Modifying other builtins like
+Function.prototype is less dangerous but still leads to hard to debug issues in production and should be avoided.</p>
+
+<h3>Internet Explorer's Conditional Comments</h3>
+
+<p>No
+Don't do this: <em>bad</em></p>
+
+<pre><code>var f = function () {
+    /*@cc_on if (@_jscript) { return 2* @*/  3; /*@ } @*/
+};
+</code></pre>
+
+<p>Conditional Comments hinder automated tools as they can vary the JavaScript syntax tree at runtime.</p>
+
+<h2>Code Formatting Rules</h2>
+
+<h3>Curly Braces</h3>
+
+<p>Because of implicit semicolon insertion, always start your curly braces on the same line as whatever they're opening (egyption braces).
+example:</p>
+
+<pre><code>if (something) {
+    // ...
+} else {
+    // ...
+}
+</code></pre>
+
+<h3>Array and Object Initializers</h3>
+
+<p>Single-line array and object initializers are allowed when they fit on a line:</p>
+
+<p>var arr = [1, 2, 3];  // No space after [ or before ].
+var obj = {a: 1, b: 2, c: 3};  // No space after { or before }.
+Multiline array initializers and object initializers are indented 4 spaces, with the braces on their own line, just like blocks.</p>
+
+<pre><code>// Object initializer.
+var inset = {
+    top: 10,
+    right: 20,
+    bottom: 15,
+    left: 12
+};
+
+// Array initializer.
+this.rows_ = [
+    '"Slartibartfast" &lt;fjordmaster@magrathea.com&gt;',
+    '"Zaphod Beeblebrox" &lt;theprez@universe.gov&gt;',
+    '"Ford Prefect" &lt;ford@theguide.com&gt;',
+    '"Arthur Dent" &lt;has.no.tea@gmail.com&gt;',
+    '"Marvin the Paranoid Android" &lt;marv@googlemail.com&gt;',
+    'the.mice@magrathea.com'
+];
+
+// Used in a method call.
+goog.dom.createDom(goog.dom.TagName.DIV, {
+    id: 'foo',
+    className: 'some-css-class',
+    style: 'display:none'
+}, 'Hello, world!');
+</code></pre>
+
+<p>Long identifiers or values present problems for aligned initialization lists, so always prefer non-aligned initialization. For example:</p>
+
+<pre><code>CORRECT_Object.prototype = {
+    a: 0,
+    b: 1,
+    lengthyName: 2
+};
+</code></pre>
+
+<p>Not like this:</p>
+
+<pre><code>WRONG_Object.prototype = {
+    a          : 0,
+    b          : 1,
+    lengthyName: 2
+};
+</code></pre>
+
+<h3>Indenting wrapped lines</h3>
+
+<p>Except for array literals and object literals, all wrapped lines should be indented either left-aligned to a sibling expression above,
+or eight spaces (not four spaces) deeper than a parent expression (where "sibling" and "parent" refer to parenthesis nesting level).</p>
+
+<pre><code>someWonderfulHtml = '' +
+                    getEvenMoreHtml(someReallyInterestingValues, moreValues,
+                                    evenMoreParams, 'a duck', true, 72,
+                                    slightlyMoreMonkeys(0xfff)) +
+                    '';
+
+thisIsAVeryLongVariableName =
+        hereIsAnEvenLongerOtherFunctionNameThatWillNotFitOnPrevLine();
+
+thisIsAVeryLongVariableName = siblingOne + siblingTwo + siblingThree +
+        siblingFour + siblingFive + siblingSix + siblingSeven +
+        moreSiblingExpressions + allAtTheSameIndentationLevel;
+
+thisIsAVeryLongVariableName = operandOne + operandTwo + operandThree +
+        operandFour + operandFive * (
+                aNestedChildExpression + shouldBeIndentedMore);
+
+someValue = this.foo(
+        shortArg,
+        'Some really long string arg - this is a pretty common case, actually.',
+        shorty2,
+        this.bar());
+
+if (searchableCollection(allYourStuff).contains(theStuffYouWant) &amp;&amp; 
+    !ambientNotification.isActive() &amp;&amp; (client.isAmbientSupported() ||
+                                        client.alwaysTryAmbientAnyways())) {
+  ambientNotification.activate();
+}
+</code></pre>
+
+<h3>Blank lines</h3>
+
+<p>Use newlines to group logically related pieces of code. For example:</p>
+
+<pre><code>doSomethingTo(x);
+doSomethingElseTo(x);
+andThen(x);
+
+nowDoSomethingWith(y);
+
+andNowWith(z);
+</code></pre>
+
+<h3>Parentheses</h3>
+
+<p>Only where required
+Use sparingly and in general only where required by the syntax and semantics.</p>
+
+<p>Never use parentheses for unary operators such as <code>delete</code>, <code>typeof</code> and <code>void</code> or after keywords such as <code>return</code>,
+<code>throw</code> as well as others (<code>case</code>, <code>in</code> or <code>new</code>).</p>
+
+<h3>Strings</h3>
+
+<p>Prefer ' over "
+For consistency single-quotes (') are preferred to double-quotes ("). This is helpful when creating strings that include HTML:</p>
+
+<pre><code>var msg = '&lt;div class="foo"&gt;Because HTML attributes use double quotes!&lt;/div&gt;';
+</code></pre>
+
+<h3>Comments</h3>
+
+<p>Use JSDoc. http://usejsdoc.org/
+There are plugins for Eclipse and Intellij that make use of jsdoc comments for type checking. Use appropriate tags and types.</p>
+
+<h3>Functions</h3>
+
+<p>Functions can be written 3 ways: pointer expression, function declaration, or a .
+Function definition method should depend on how the function is used.<br>
+functions that are:
+   - not methods of an object should always use function declaration.
+   - methods of an object (including prototype objects) should always use pointer expression.
+   - Members of a namespace should be pointers to declared functions. An exception can be made
+   if the function is included as part of the namespace's initial object literal.</p>
+
+<p>examples</p>
+
+<p><em>declaration</em></p>
+
+<pre><code>function name(){
+
+} // no semicolon
+</code></pre>
+
+<p><em>expression</em></p>
+
+<pre><code>foo.name = function name(){
+    //...
+}; // semicolon
+</code></pre>
+
+<p><em>declaration + expression - namespace member refering to declared function.</em></p>
+
+<pre><code>sn.name = name; // semicolon
+function name(){
+
+}
+</code></pre>
+
+<p><em>namespace object literal</em></p>
+
+<pre><code>var sn = {
+    name: function name(){
+    }
+};
+</code></pre>
+
+<h4>naming functions</h4>
+
+<p>Functions with names make debugging easier - a stack trace will give function names, but not
+pointer names refering to anonymous functions.</p>
+
+<p><em>bad</em></p>
+
+<pre><code>var name = function(){ ... };
+</code></pre>
+
+<p><em>good</em></p>
+
+<pre><code>var name = function name(){ ... };
+</code></pre>
+
+<h4>nesting function</h4>
+
+<p>Functions that require a function as a parameter should use a pointer or the function name
+as the parameter, unless the function is very short and the first line begins with <code>return</code> keyword.</p>
+
+<blockquote>
+  <p>note: The body of a one line function may omit the last semicolon.</p>
+</blockquote>
+
+<p>examples:<br>
+using pointer pointer</p>
+
+<pre><code>$('# item').on('click', onClick);
+function onClick(e){
+
+}
+</code></pre>
+
+<p>using short one-liner</p>
+
+<pre><code>d3.select('div')
+    .attr('class', function(d){ return d })
+    .style('background', 'blue');
+</code></pre>
+
+<h4>function declarations within blocks</h4>
+
+<p>no. strict mode should disallow function declarations within blocks.</p>
+
+<h4>function definition within blcoks.</h4>
+
+<p>It may be necessary at times to define a function differently depending on some variable.
+in this case, it may seem logical to use a giant if-else with 2 sets of instructions inside the function.
+But it is better for performance if the variable is checked before the function is ever called and
+the definition is based on the environment.</p>
+
+<blockquote>
+  <p>note: function expressions arent treated like declared functions in that they arent hoisted to the top
+  of the scope. Be careful when they are used. In code executed before the expression, the var is undefined.</p>
+</blockquote>
+
+<p><em>bad</em></p>
+
+<pre><code>function someFunction(a,b){
+   if(sn.isIE()) {
+       /*...*/
+   } else {
+       /*...*/
+   }
+}
+</code></pre>
+
+<p><em>good</em></p>
+
+<pre><code>var someFunction;
+if(sn.isIE()){
+    someFunction = function(){ /*...*/ };
+} else {
+    someFunction = function(){ /*...*/ };
+}
+</code></pre>
+
+<h4>Function Arguments</h4>
+
+<p>When possible, all function arguments should be listed on the same line. If doing so would cause the need to scroll,
+then the arguments must be line-wrapped in a readable way. Put each argument on its own line to enhance readability. 
+The indentation may be either eight spaces, or aligned to the parenthesis. Below are the most common patterns for
+argument wrapping:</p>
+
+<pre><code>// Four-space, wrap at 80.  Works with very long function names, survives
+// renaming without reindenting, low on space.
+goog.foo.bar.doThingThatIsVeryDifficultToExplain = function(
+        veryDescriptiveArgumentNumberOne, veryDescriptiveArgumentTwo,
+        tableModelEventHandlerProxy, artichokeDescriptorAdapterIterator) {
+  // ...
+};
+
+// Eight-space, one argument per line.  Works with long function names,
+// survives renaming, and emphasizes each argument.
+goog.foo.bar.doThingThatIsVeryDifficultToExplain = function(
+        veryDescriptiveArgumentNumberOne,
+        veryDescriptiveArgumentTwo,
+        tableModelEventHandlerProxy,
+        artichokeDescriptorAdapterIterator) {
+  // ...
+};
+
+// Parenthesis-aligned indentation, wrap at 80.  Visually groups arguments,
+// low on space.
+function foo(veryDescriptiveArgumentNumberOne, veryDescriptiveArgumentTwo,
+             tableModelEventHandlerProxy, artichokeDescriptorAdapterIterator) {
+  // ...
+}
+
+// Parenthesis-aligned, one argument per line.  Emphasizes each
+// individual argument.
+function bar(veryDescriptiveArgumentNumberOne,
+             veryDescriptiveArgumentTwo,
+             tableModelEventHandlerProxy,
+             artichokeDescriptorAdapterIterator) {
+  // ...
+}
+</code></pre>
+
+<h4>Chained methods</h4>
+
+<p>keep chained methods on separate lines unless horizontally aligning several calls to the same methods using similar parameters (common in d3).
+note: dont spend too much time horizontally aligning any code - trying to make it pretty will consume way too much time.
+You have much more important things to do than add and remove superfluous whitespace.</p>
+
+<p>example:</p>
+
+<p><em>line breaks</em></p>
+
+<pre><code>d3.select('div')
+        .attr('class', 'foo')
+        .style('background', 'black');
+</code></pre>
+
+<p><em>vertically aligned</em></p>
+
+<pre><code>chartGroupA.append('g').classed('chartA', true).attr('transform', 'translate(0, 0)');
+chartGroupB.append('g').classed('chartB', true).attr('transform', 'translate(100, 0)');
+chartGroupC.append('g').classed('chartC', true);
+</code></pre>
+
+<h3>self executing wrapper</h3>
+
+<p>Only namespaces should be declared in global space.
+We only use javascript in the browser, so you can be fairly certain that the
+global object is 'window'. Any properties of 'window' are in global space.
+everything else should be placed insde a root level self executing function.</p>
+
+<h4>self executing syntax</h4>
+
+<p>There are a few ways you can write a self executing function, all end with a pair of parentheses that call the function.</p>
+
+<p><em>double parenthases</em>
+The function is wrapped in parentheses, making the expression a statement
+keep away from this type of self executing funciton. It can cause a fatal error if the code statement immeditely before it 
+omits a semicolon.</p>
+
+<pre><code>(function() {
+    /* ... */
+})();
+</code></pre>
+
+<p><em>evaluates to 'true' or 'false'</em></p>
+
+<pre><code>!function() {
+    /* ... */
+}();
+</code></pre>
+
+<p>The boolean method avoids the saftey concerns found in the parentheses method, but
+also returns a value. You can choose to do what you want with the value. Most
+          of the time it is forgotten, which may lead to future problems.</p>
+
+<p><em>best  -  executes and leaves no trace</em></p>
+
+<pre><code>void function() {
+    /* ... */
+}();
+</code></pre>
+
+<p>the javascript "void" keyword is not widely used, but is a lot safer for writing
+self executing functions than the alternatives.</p>
+
+<h2>Function scopes.</h2>
+
+<p>javascript is function scoped. Please stick as close to this pattern as possible
+for every function.</p>
+
+<pre><code>function {
+    var definitions/assignment
+    init code
+    function declarations
+}
+</code></pre>
+
+<p>This way, when somebody opens the file for editing, the <code>var definitiions</code> and <code>init code</code>
+can give a broad overview of whats happening on the page, while the implementation is
+mostly contained in the functions. You can use code folding to make it even easier to read.</p>
+
+<p>example:</p>
+
+<pre><code>void function() {
+    'use strict';
+
+    //== vars ==
+
+    /** @type {jQuery} */
+    var $form = $('form');
+
+    /** @type {jQuery} */
+    var $username = $('input[name=username]');
+
+    /** @type {jQuery} */
+    var $password = $('input[name=password]');
+
+    //== init ==//
+    $username.addClass('disabled')
+        .prop('disabled', true)
+        .on('change', userChange);
+
+
+    //== functions ==//
+    function userChange() {
+          $password.val(randomPassword(10));
+    }
+
+    /**
+    @description Generates a random password that is 'length' characters long.
+    @param {Number} length - number of characters the password should contain.
+    @return {String}. */
+        function randomPassword(length) {
+            var string = '';
+            return string;
+        }
+
+}();
+</code></pre>
+
+<p>Non-function blocks (for, if, do, try, etc... blocks) do not create new scopes, and should not have
+vars or functions declared within.</p>
+
+<h2>Javascript tips and tricks.</h2>
+
+<h4>jQuery selections</h4>
+
+<p>Interacting with the DOM is expensive in terms of CPU usage. </p>
