@@ -2,11 +2,13 @@
 body { font-family: arial; font-size:12pt }
 [class^="code"]{
     padding: 5px 5px 5px 10px;
+    border-left: solid 7px rgba(0,0,0,0.2)
 }
-.code-bad { background: #DCEFBD }
-.code-good { background: #E4B3B3 }
-.code { background: #E6F4FB }
-
+.code-good { background: #DCEFBD }
+.code-bad { background: #E4B3B3 }
+code,.code { background: #E6F4FB }
+code {border: solid 1px #15c6ff; padding: 0 4px; }
+ul.nobullet { list-style: none }
 pre { font-size: 10pt; }
 </style>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
@@ -16,7 +18,7 @@ pre { font-size: 10pt; }
         [1,2,3,4].forEach(function(num){
           var nodeType = 'h' + num;
           $(nodeType).each(function(){
-              var $ul = $('<ul>').insertAfter($(this));
+              var $ul = $('<ul class="nobullet">').insertAfter($(this));
               $ul.nextUntil(nodeType).wrapAll('<li>').parent().appendTo($ul);
           });
 
